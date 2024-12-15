@@ -26,16 +26,27 @@ def handle_client(client_socket):
 
             elif command[0] == "DOWNLOAD":
                 file_name, offset, chunk_size = command[1], int(command[2]), int(command[3])
+                print(file_name, offset, chunk_size)
                 if file_name not in FILE_LIST:
                     client_socket.sendall(f"ERROR File not found: {file_name}".encode())
+                    print("File name not in file list")
                     continue
 
-                file_path = file_name
+                file_path = "./files/" + file_name
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
                         f.seek(offset)
-                        data = f.read(chunk_size)
-                        client_socket.sendall(data)
+                        # data = f.read(chunk_size)
+                        # print(f"{file_name}: Sending {len(data)} bytes from offset {offset} with chunk size {chunk_size}")
+                        # client_socket.sendall(data)
+                        sent = 0
+                        while sent < chunk_size:
+                            data = f.read(min(chunk_size - sent, 1024))  # Ensure full chunk is read and sent
+                            if not data:
+                                break
+                            client_socket.sendall(data)
+                            sent += len(data)
+                        print(f"{file_name}: Sending {sent} bytes from offset {offset} with chunk size {chunk_size}")
                 else:
                     client_socket.sendall(f"ERROR File not found on server".encode())
     except Exception as e:
