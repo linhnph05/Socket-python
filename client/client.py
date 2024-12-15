@@ -27,7 +27,7 @@ def monitor_input_file(input_file):
         # Xử lý từng file mới
         for file_name in new_files:
             print(f"New file detected: {file_name}")
-            print(file_info)
+            # print(file_info)
             download_file(file_name, file_info[file_name]) 
             processed_files.add(file_name)
         
@@ -38,12 +38,19 @@ def download_chunk(file_name, part, offset, chunk_size, output_folder):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((HOST, PORT))
     client.sendall(f"DOWNLOAD {file_name} {offset} {chunk_size}".encode())
-    data = client.recv(chunk_size)
+    # data = client.recv(chunk_size)
 
     part_path = os.path.join(output_folder, f"{file_name}.part{part}")
     with open(part_path, "wb") as f:
-        f.write(data)
-
+        received = 0
+        while received < chunk_size:
+            data = client.recv(min(chunk_size - received, 1024))  # Read up to remaining size or 4KB
+            if not data:
+                break
+            f.write(data)
+            received += len(data)
+            # print(f"Part {part}: Received {received}/{chunk_size} bytes")
+    print(f"Part {part} downloaded")
     client.close()
 
 
@@ -60,20 +67,30 @@ def download_file(file_name, file_size):
     output_folder = "./downloads"
     os.makedirs(output_folder, exist_ok=True)
     num_parts = 4
+    # chunk_size = file_size // num_parts
+
+    # threads = []
+    # for i in range(num_parts):
+    #     offset = i * chunk_size
+    #     thread = threading.Thread(target=download_chunk, args=(file_name, i, offset, chunk_size, output_folder))
+    #     threads.append(thread)
+    #     thread.start()
+
     chunk_size = file_size // num_parts
+    last_chunk_size = file_size - (chunk_size * (num_parts - 1))
 
     threads = []
     for i in range(num_parts):
         offset = i * chunk_size
-        thread = threading.Thread(target=download_chunk, args=(file_name, i, offset, chunk_size, output_folder))
+        size = last_chunk_size if i == num_parts - 1 else chunk_size
+        thread = threading.Thread(target=download_chunk, args=(file_name, i, offset, size, output_folder))
         threads.append(thread)
         thread.start()
-
     for thread in threads:
         thread.join()
 
     merge_chunks(file_name, output_folder, num_parts)
-    print(f"Download complete: {file_name}")
+    # print(f"Download complete: {file_name}")
 
 def request_file_list():
     global file_info # Reset dictionary
@@ -89,7 +106,7 @@ def request_file_list():
     for line in response.splitlines():
         name, size = line.split()
         file_info[name] = int(size)  # Lưu tên file và kích thước vào dictionary
-    print(file_info)
+    # print(file_info)
 
     client.close()
 
