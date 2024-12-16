@@ -3,9 +3,9 @@ import socket
 import threading
 
 FILE_LIST = {
-    "File1.zip": 5 * 1024 * 1024,
-    "File2.zip": 10 * 1024 * 1024,
-    "File3.zip": 20 * 1024 * 1024,
+    "File1.zip": 5242828,
+    "File2.zip": 10486508,
+    "File3.zip": 20973868,
 }
 
 HOST = '127.0.0.1'
