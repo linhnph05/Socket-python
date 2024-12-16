@@ -1,6 +1,7 @@
 import os
 import socket
 import threading
+import pyfiglet
 
 FILE_LIST = {
     "File1.zip": 5242828,
@@ -54,11 +55,15 @@ def handle_client(client_socket):
     finally:
         client_socket.close()
 
-
+def display_banner(text):
+    banner = pyfiglet.figlet_format(text)
+    print(banner)
+    
 def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
     server.listen(5)
+    display_banner("SERVER")
     print(f"Server started at {HOST}:{PORT}")
     while True:
         client_socket, addr = server.accept()
