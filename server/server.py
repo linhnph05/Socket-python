@@ -4,9 +4,7 @@ import threading
 import pyfiglet
 
 FILE_LIST = {
-    "File1.zip": 5242828,
-    "File2.zip": 10486508,
-    "File3.zip": 20973868,
+    
 }
 
 HOST = '127.0.0.1'
@@ -16,18 +14,23 @@ PORT = 12345
 def handle_client(client_socket):
     try:
         while True:
+            with open("file_list.txt", "r") as file:
+                file_lines = file.readlines()
+            for line in file_lines:
+                file_name, size = line.strip().removesuffix("B").rsplit(maxsplit=1)
+                FILE_LIST[file_name] = size
+            # print(FILE_LIST)
             request = client_socket.recv(1024).decode()
             if not request:
                 break
 
             command = request.split()
             if command[0] == "LIST":
-                response = "\n".join([f"{file_name} {size}" for file_name, size in FILE_LIST.items()])
+                response = "\n".join([f"{file_name} {size}B" for file_name, size in FILE_LIST.items()])
                 client_socket.sendall(response.encode())
 
             elif command[0] == "DOWNLOAD":
                 file_name, offset, chunk_size = command[1], int(command[2]), int(command[3])
-                print(file_name, offset, chunk_size)
                 if file_name not in FILE_LIST:
                     client_socket.sendall(f"ERROR File not found: {file_name}".encode())
                     print("File name not in file list")
@@ -37,9 +40,6 @@ def handle_client(client_socket):
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
                         f.seek(offset)
-                        # data = f.read(chunk_size)
-                        # print(f"{file_name}: Sending {len(data)} bytes from offset {offset} with chunk size {chunk_size}")
-                        # client_socket.sendall(data)
                         sent = 0
                         while sent < chunk_size:
                             data = f.read(min(chunk_size - sent, 1024))  # Ensure full chunk is read and sent
