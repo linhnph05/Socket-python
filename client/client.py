@@ -71,9 +71,6 @@ def download_chunk(file_name, part, offset, chunk_size, output_folder):
     
     client.close()
 
-    
-
-
 def merge_chunks(file_name, output_folder, num_parts):
     with open(file_name, "wb") as output_file:
         for part in range(num_parts):
@@ -116,6 +113,7 @@ def request_file_list():
     file_info.clear()
     for line in response.splitlines():
         name, size = line.split()
+        size = size.removesuffix("B")  # Remove the last character "B" from size
         file_info[name] = int(size)  # Lưu tên file và kích thước vào dictionary
     # print(file_info)
 
