@@ -1,0 +1,4 @@
+cat.png 394930B
+trump.png 468407B
+pepe.png 394670B
+elon.png 1074346B
