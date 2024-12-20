@@ -1,3 +1,2 @@
 cat.png
-elon.png
-pepe.png
+

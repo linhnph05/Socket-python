@@ -1,6 +1,15 @@
 import socket
 import os
 
+def load_file_list(files_directory):
+    file_list = {}
+    for file_name in os.listdir(files_directory):
+        file_path = os.path.join(files_directory, file_name)
+        if os.path.isfile(file_path):
+            file_size = os.path.getsize(file_path)
+            file_list[file_name] = file_size
+    return file_list
+
 def udp_file_server(host, port, files_directory):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((host, port))
@@ -8,7 +17,15 @@ def udp_file_server(host, port, files_directory):
 
     while True:
         file_request, addr = sock.recvfrom(1024)
-        file_name = file_request.decode()
+        request = file_request.decode()
+
+        if request == "LIST":
+            file_list = load_file_list(files_directory)
+            response = "\n".join([f"{file_name} {size}B" for file_name, size in file_list.items()])
+            sock.sendto(response.encode(), addr)
+            continue
+
+        file_name = request
         file_path = os.path.join(files_directory, file_name)
 
         if os.path.exists(file_path):

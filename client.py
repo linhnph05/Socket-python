@@ -2,10 +2,20 @@ import socket
 import os
 import time
 
+def request_file_list(sock, server_address):
+    sock.sendto("LIST".encode(), server_address)
+    response, _ = sock.recvfrom(4096)
+    response = response.decode()
+    print("Available files on server:")
+    print(response)
+
 def udp_file_client(server_host, server_port, input_file, output_directory):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = (server_host, server_port)
     downloaded_files = set()
+
+    # Request and display the list of files on the server
+    request_file_list(sock, server_address)
 
     while True:
         with open(input_file, 'r') as file_list:
